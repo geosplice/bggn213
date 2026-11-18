@@ -1,0 +1,188 @@
+---
+title: "Class 05: Data Viz with ggplot"
+author: "George Mariscal"
+format: pdf
+toc: true
+---
+
+## Background
+
+Today we are going to learn all about the **ggplot2** package in R.
+
+There are tons of graphics packages in R. These include "base R graphics" (like the `plot()` function we used last day) add on packages like **ggplot2**
+
+### Comparing base graphics with ggplot
+
+We can use the in-build data frame `cars` to play with the plotting:
+
+```{r}
+head(cars)
+```
+
+plot(cars)
+
+Now with ggplot: First I need to install the package with `install.packages()` \> I do not want to run `install.packages("ggplot2")` in my quarto document as this will result in me reinstalling the package everytime I render my report.
+
+Every time I want to use a function from a given package I need to load it up with a `library` call:
+
+```{r}
+library(ggplot2)
+ggplot(cars)
+```
+
+Every ggplot needs at least 3 things
+
+- the **data** (data.frame we want to plot from)
+- the **aesthetics** (how the columns of the data map to the plot)
+- the **geom** (how you want the plot drawn, points, lines, columns, etc.)
+
+```{r}
+ggplot(data=cars) +
+  aes(x = speed, y = dist) +
+  geom_point(color = "blue") +
+  geom_line(color ="red") +
+  geom_smooth(method = "lm", se = FALSE, color ="gold2") +
+  theme_bw() +
+  labs(x="Speed in MPH",
+       y ="Stopping Distance (ft)",
+       title="Silly Plot of Stopping Distances")
+
+
+```
+
+## Gene Expression Plot
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+```{r}
+ggplot(genes) + 
+  aes(x=Condition1, y=Condition2) +
+  geom_point(color="firebrick3", size = 0.5, alpha = 0.7)
+
+  
+```
+
+> Q. How many genes are in this data set?
+
+```{r}
+nrow(genes)
+```
+
+> Q. How many are upregulated?
+
+```{r}
+table(genes$State)
+```
+
+```{r}
+#genes$State == "up"
+#genes$State
+sum (genes$State == "up")
+```
+
+> Q. What percentage of genes are downregulated?
+
+```{r}
+n.total <- nrow (genes)
+n.down <- sum (genes$State == "down") 
+
+ans <- round(n.down/n.total *100, 2)
+ans
+```
+
+The percentage of down genes is `r ans` % and that is that ...
+
+```{r}
+myplot <- ggplot(genes) +
+  aes (x = Condition1, y = Condition2, col = State) +
+  geom_point(size = 0.5, alpha= 0.8)
+```
+
+```{r}
+ggplot(genes) +
+  aes (x = Condition1, y = Condition2, col = State) +
+  geom_point(size = 0.5) +
+  scale_colour_manual (values = c("dodgerblue3", "navajowhite2", "red")) +
+    labs(x="Control (no drug)",
+       y ="Drug Treated",
+       title="Gene Expression changes upon drug treament", 
+       subtitle = "GLP-1 inhibitor from Novo")
+```
+
+We can install extra packages with \`install.packages() like them packages for sponebob colors or actually useful ones like **patchwork** for combining plots:
+
+```{r}
+library(patchwork)
+
+# Setup some example plots 
+p1 <- ggplot(mtcars) + geom_point(aes(mpg, disp))
+p2 <- ggplot(mtcars) + geom_boxplot(aes(gear, disp, group = gear))
+p3 <- ggplot(mtcars) + geom_smooth(aes(disp, qsec))
+p4 <- ggplot(mtcars) + geom_bar(aes(carb))
+
+# Use patchwork to combine them here:
+(p1 | p2 | p3) /
+      p4
+
+```
+
+```{r}
+myplot +
+  facet_wrap(~State)
+```
+
+## Gapminder
+
+```{r}
+# File location online
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+
+gapminder <- read.delim(url)
+```
+
+```{r}
+head(gapminder)
+```
+
+> Q. How many entries are there in this data set
+
+```{r}
+length(unique(gapminder$country))
+
+```
+
+```{r}
+meowplot <- ggplot(gapminder) +
+  aes (x = lifeExp, y = gdpPercap, col = continent) +
+  geom_point(size = 0.8, alpha = 0.6) +
+    labs(x="Life Expectancy (years)",
+       y ="GDP per Capita ($)",
+       title="Life Expectancy based on GDP per Capita")
+
+meowplot
+```
+
+```{r}
+meowplot +
+  facet_wrap(~continent)
+```
+
+Histograms of
+
+```{r}
+ggplot(gapminder) +
+  aes(lifeExp, fill = continent) +
+  geom_histogram()
+```
+
+Boxplots of
+
+```{r}
+ggplot(gapminder) +
+  aes(lifeExp, continent,fill = continent) +
+  geom_boxplot()
+```
